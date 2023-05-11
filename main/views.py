@@ -944,7 +944,7 @@ def image_upload(req: HttpRequest):
             for frame in ImageSequence.Iterator(img):
                 resized_frame = frame.resize(resize_size, Image.ANTIALIAS)
                 frames.append(resized_frame)
-            frames[0].save(resize_path, save_all=True, append_images=frames[1:])
+            frames[0].save(resize_path, save_all=True, append_images=frames[1:], disposal=2)
 
         if os.getenv('DEPLOY') is not None:
             helpers.post_search_metadata(user, gif)
@@ -1102,7 +1102,7 @@ def image_upload_resize_task(*, title: str, category: str, tags: list, user: int
             resized_frame = frame.resize(resize_size, Image.ANTIALIAS)
             frames.append(resized_frame)
         output_file = io.BytesIO()
-        frames[0].save(output_file, format='GIF', save_all=True, append_images=frames[1:])
+        frames[0].save(output_file, format='GIF', save_all=True, append_images=frames[1:], disposal=2)
 
     image = Image.open(output_file)
     gif_fingerprint = imagehash.average_hash(image, hash_size=16)
@@ -1146,7 +1146,7 @@ def image_upload_resize_task(*, title: str, category: str, tags: list, user: int
         for frame in ImageSequence.Iterator(img):
             resized_frame = frame.resize(resize_size, Image.ANTIALIAS)
             frames.append(resized_frame)
-        frames[0].save(resize_path, save_all=True, append_images=frames[1:])
+        frames[0].save(resize_path, save_all=True, append_images=frames[1:], disposal=2)
 
     os.remove(name)
     upload_user = UserInfo.objects.filter(id=user).first()
@@ -1713,7 +1713,7 @@ def image_upload_video_task(*, title: str, category: str, tags: list, user: int,
         for frame in ImageSequence.Iterator(img):
             resized_frame = frame.resize(resize_size, Image.ANTIALIAS)
             frames.append(resized_frame)
-        frames[0].save(new_path, save_all=True, append_images=frames[1:])
+        frames[0].save(new_path, save_all=True, append_images=frames[1:], disposal=2)
 
     gif = GifMetadata.objects.create(title=title, uploader=user, category=category, tags=tags)
     gif_file = GifFile.objects.create(metadata=gif, file=new_path)
@@ -1745,7 +1745,7 @@ def image_upload_video_task(*, title: str, category: str, tags: list, user: int,
         for frame in ImageSequence.Iterator(img):
             resized_frame = frame.resize(resize_size, Image.ANTIALIAS)
             frames.append(resized_frame)
-        frames[0].save(resize_path, save_all=True, append_images=frames[1:])
+        frames[0].save(resize_path, save_all=True, append_images=frames[1:], disposal=2)
 
     upload_user = UserInfo.objects.filter(id=user).first()
     if os.getenv('DEPLOY') is not None:
@@ -1868,7 +1868,7 @@ def image_watermark_task(gif_id, user_name):
             draw.text((x_axis, y_axis), text, font=font, fill=(0, 0, 0, 255))
             frame = Image.alpha_composite(frame.convert('RGBA'), watermark_image)
             frames.append(frame)
-        frames[0].save(gif.giffile.file.path, save_all=True, append_images=frames[1:])
+        frames[0].save(gif.giffile.file.path, save_all=True, append_images=frames[1:], disposal=2)
     return_data = {"id": gif.id}
     return return_data
 
