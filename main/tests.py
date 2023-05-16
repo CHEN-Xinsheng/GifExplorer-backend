@@ -83,6 +83,18 @@ class ViewsTests(TestCase):
         }
         return self.client.get('/user/register', data=req, content_type="application/json")
 
+    def user_register_with_wrong_format(self, user_name, password, salt, mail):
+        '''
+            Create a POST/user/register HttpRequest
+        '''
+        req = {
+            "user_name": user_name,
+            "password": password,
+            "salty": salt,
+            "mail": mail
+        }
+        return self.client.post('/user/register', data=req, content_type="application/json")
+
     def user_register_with_correct_response_method(self, user_name, password, salt, mail):
         '''
             Create a POST/user/register HttpRequest
@@ -116,6 +128,16 @@ class ViewsTests(TestCase):
         }
         return self.client.get('/user/salt', data=req, content_type="application/json")
 
+    def user_salt_with_wrong_format(self, user_name):
+        '''
+            Create a POST/user/salt HttpRequest
+        '''
+        req = {
+            "username": user_name,
+            "id": 1
+        }
+        return self.client.post('/user/salt', data=req, content_type="application/json")
+
     def user_salt_with_correct_response_method(self, user_name):
         '''
             Create a POST/user/salt HttpRequest
@@ -126,6 +148,18 @@ class ViewsTests(TestCase):
         }
         return self.client.post('/user/salt', data=req, content_type="application/json")
 
+    def user_password_with_wrong_response_method(self, user_id):
+        '''
+            Create a GET/user/password HttpRequest
+        '''
+        return self.client.get('/user/password/' + str(user_id))
+
+    def user_password_with_correct_response_method(self, user_id):
+        '''
+            Create a POST/user/password HttpRequest
+        '''
+        return self.client.post('/user/password/' + str(user_id))
+
     def user_login_with_wrong_response_method(self, user_name, password):
         '''
             Create a GET/user/login HttpRequest
@@ -135,6 +169,16 @@ class ViewsTests(TestCase):
             "password": password
         }
         return self.client.get('/user/login', data=req, content_type="application/json")
+
+    def user_login_with_wrong_format(self, user_name, password):
+        '''
+            Create a POST/user/login HttpRequest
+        '''
+        req = {
+            "username": user_name,
+            "password": password
+        }
+        return self.client.post('/user/login', data=req, content_type="application/json")
 
     def user_login_with_correct_response_method(self, user_name, password):
         '''
@@ -156,6 +200,17 @@ class ViewsTests(TestCase):
             "new_password": new_password
         }
         return self.client.get('/user/modifypassword', data=req, content_type="application/json", HTTP_AUTHORIZATION=token)
+
+    def user_modify_password_with_wrong_format(self, user_name, old_password, new_password, token):
+        '''
+            Create a POST/user/modifypassword HttpRequest
+        '''
+        req = {
+            "username": user_name,
+            "old_password": old_password,
+            "new_password": new_password
+        }
+        return self.client.post('/user/modifypassword', data=req, content_type="application/json", HTTP_AUTHORIZATION=token)
 
     def user_modify_password_with_correct_response_method(self, user_name, old_password, new_password, token):
         '''
@@ -222,6 +277,15 @@ class ViewsTests(TestCase):
         }
         return self.client.put('/user/signature', data=req, content_type="application/json", HTTP_AUTHORIZATION=token)
 
+    def user_signature_with_wrong_format(self, signature, token):
+        '''
+            Create a POST/user/signature HttpRequest
+        '''
+        req = {
+            'signatures': signature
+        }
+        return self.client.post('/user/signature', data=req, content_type="application/json", HTTP_AUTHORIZATION=token)
+
     def user_signature_with_correct_response_method(self, signature, token):
         '''
             Create a POST/user/signature HttpRequest
@@ -260,6 +324,12 @@ class ViewsTests(TestCase):
             Create a POST/user/profile HttpRequest
         '''
         return self.client.post('/user/profile/'+user_id)
+
+    def user_profile_with_token(self, user_id, token):
+        '''
+            Create a GET/user/profile HttpRequest
+        '''
+        return self.client.get('/user/profile/'+user_id, HTTP_AUTHORIZATION=token)
 
     def user_profile_with_correct_response_method(self, user_id):
         '''
@@ -764,13 +834,13 @@ class ViewsTests(TestCase):
             Create a GET/image/search HttpRequest
         '''
         return self.client.get('/image/search', data=req, content_type="application/json")
-    
+
     def image_search_with_correct_response_method(self, req):
         '''
             Create a POST/image/search HttpRequest
         '''
         return self.client.post('/image/search', data=req, content_type="application/json")
- 
+
     def image_search_with_token(self, req, token):
         '''
             Create a POST/user/message HttpRequest with token
@@ -788,7 +858,27 @@ class ViewsTests(TestCase):
             Create a POST/image/search/suggest HttpRequest
         '''
         return self.client.post('/image/search/suggest', data=req, content_type="application/json")
+    
+    def search_hotwords_with_worng_response_method(self):
+        '''
+            Create a POST/image/search/hotwords HttpRequest
+        '''
+        return self.client.post('/image/search/hotwords', content_type="application/json")
 
+    def search_hotwords_with_correct_response_method(self):
+        '''
+            Create a GET/image/search/hotwords HttpRequest
+        '''
+        return self.client.get('/image/search/hotwords', content_type="application/json")
+
+
+    def test_startup(self):
+        '''
+            Test startup
+        '''
+        res = self.client.get("/startup")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res['Content-Type'], 'text/html; charset=utf-8')
 
     def test_user_login(self):
         '''
@@ -843,6 +933,14 @@ class ViewsTests(TestCase):
         res = self.user_login_with_correct_response_method(user_name="Wrong_name!", password="Wrong!")
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["code"], 4)
+
+    def test_user_login_with_wrong_format(self):
+        '''
+            Test user login with wrong format
+        '''
+        res = self.user_login_with_wrong_format(user_name="Wrong_name!", password="Wrong!")
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()["code"], 1005)
 
     def test_user_mail_verify(self):
         '''
@@ -936,6 +1034,42 @@ class ViewsTests(TestCase):
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["code"], 4)
 
+    def test_user_salt_with_wrong_format(self):
+        '''
+            Test user register with wrong format
+        '''
+        for i in range(self.user_num):
+            user_name = self.user_name_list[i]
+
+            res = self.user_salt_with_wrong_format(user_name=user_name)
+            self.assertEqual(res.status_code, 400)
+            self.assertEqual(res.json()["code"], 1005)
+
+    def test_user_password(self):
+        '''
+            Test user password
+        '''
+        for i in range(self.user_num):
+            res = self.user_password_with_correct_response_method(user_id=self.user_id[i])
+            self.assertEqual(res.status_code, 200)
+            self.assertEqual(res.json()["code"], 0)
+
+    def test_user_password_with_wrong_response_method(self):
+        '''
+            Test user password with wrong response method
+        '''
+        res = self.user_password_with_wrong_response_method(user_id=1)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.json()["code"], 1000)
+
+    def test_user_password_with_user_not_exists(self):
+        '''
+            Test user password when user does not exist
+        '''
+        res = self.user_password_with_correct_response_method(user_id=114514)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()["code"], 4)
+
     def test_user_register(self):
         '''
             Test user register
@@ -965,7 +1099,7 @@ class ViewsTests(TestCase):
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["code"], 1)
 
-    def test_register_with_wrong_response_method(self):
+    def test_user_register_with_wrong_response_method(self):
         '''
             Test user register with get method
         '''
@@ -976,11 +1110,21 @@ class ViewsTests(TestCase):
         '''
             Test user register with wrong data type
         '''
-        res = self.user_register_with_correct_response_method(user_name="Cindy", password=1145141919810, salt="es123", mail="Cindy@126.com")
+        res = self.user_register_with_correct_response_method(user_name="Cindy", password=1.0, salt="es123", mail="Cindy@126.com")
         self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()["code"], 3)
 
-        res = self.user_register_with_correct_response_method(user_name=1145141919810, password="password", salt="es123", mail="Tensorflow@126.com")
+        res = self.user_register_with_correct_response_method(user_name=1.0, password="password", salt="es123", mail="Tensorflow@126.com")
         self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()["code"], 2)
+
+    def test_user_register_with_wrong_format(self):
+        '''
+            Test user register with wrong data type
+        '''
+        res = self.user_register_with_wrong_format(user_name="Cindy", password="Password123", salt="es123", mail="Cindy@126.com")
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()["code"], 1005)
 
     def test_user_modify_password(self):
         '''
@@ -1020,6 +1164,22 @@ class ViewsTests(TestCase):
             self.assertEqual(res.json()["code"], 1000)
             helpers.delete_token_from_white_list(token)
 
+    def test_user_modify_password_with_wrong_format(self):
+        '''
+            Test user modify password with wrong format
+        '''
+        for i in range(self.user_num):
+            user_name = self.user_name_list[i]
+            old_password = self.user_password[i]
+            new_password = "New!" + self.user_password[i]
+
+            token = self.user_token[i]
+            helpers.add_token_to_white_list(token)
+            res = self.user_modify_password_with_wrong_format(user_name=user_name, old_password=old_password, new_password=new_password, token=token)
+            self.assertEqual(res.status_code, 400)
+            self.assertEqual(res.json()["code"], 1005)
+            helpers.delete_token_from_white_list(token)
+
     def test_user_modify_password_with_wrong_token(self):
         '''
             Test user modify password with wrong token
@@ -1045,7 +1205,7 @@ class ViewsTests(TestCase):
             old_password = self.user_password[i]
             new_password = "New!" + self.user_password[i]
 
-            token = helpers.create_token(user_name=user_name, user_id=i+1)
+            token = helpers.create_token(user_name=user_name, user_id=self.user_id[i])
             helpers.add_token_to_white_list(token)
             res = self.user_modify_password_with_correct_response_method(user_name=user_name, old_password=old_password, new_password=new_password, token=token)
             self.assertEqual(res.status_code, 400)
@@ -1123,10 +1283,20 @@ class ViewsTests(TestCase):
         res = self.user_avatar_with_file_not_exist(url="files/tests/avatar.jpeg", token=token)
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["code"], 18)
-        res = self.user_avatar_with_file_not_exist(url="files/tests/Milk.gif", token=token)
+        res = self.user_avatar_with_correct_response_method(url="files/tests/Milk.gif", token=token)
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()["code"], 18)
         helpers.delete_token_from_white_list(token)
+
+    def test_user_avatar_with_user_not_exists(self):
+        '''
+            Test user avatar with user not exists
+        '''
+        token = helpers.create_token(user_name="Not exist", user_id=100)
+
+        res = self.user_avatar_with_correct_response_method(url="files/tests/avatar.jpeg", token=token)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.json()["code"], 1001)
 
     def test_user_signature(self):
         '''
@@ -1171,6 +1341,28 @@ class ViewsTests(TestCase):
         self.assertEqual(res.status_code, 401)
         self.assertEqual(res.json()["code"], 1001)
         helpers.delete_token_from_white_list(token)
+
+    def test_user_signature_with_wrong_format(self):
+        '''
+            Test user signature with wrong format
+        '''
+        token = self.user_token[0]
+        helpers.add_token_to_white_list(token)
+
+        res = self.user_signature_with_wrong_format(signature="I am the Lord", token=token)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()["code"], 1005)
+        helpers.delete_token_from_white_list(token)
+
+    def test_user_signature_with_user_not_exists(self):
+        '''
+            Test user signature with user not exists
+        '''
+        token = helpers.create_token(user_name="Not exist", user_id=100)
+
+        res = self.user_signature_with_correct_response_method(signature="I am the Lord", token=token)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.json()["code"], 1001)
 
     def test_user_avatar_get(self):
         '''
@@ -1264,6 +1456,28 @@ class ViewsTests(TestCase):
             res = self.user_profile_with_correct_response_method(str(self.user_id[i]))
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json()["code"], 0)
+
+    def test_user_profile_with_token(self):
+        '''
+            Test user profile with token
+        '''
+        token = self.user_token[0]
+        helpers.add_token_to_white_list(token)
+        self.user_follow_with_correct_response_method(user_id=2, token=token)
+        res = self.user_profile_with_correct_response_method(str(2))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["code"], 0)
+
+    def test_user_profile_with_invalid_token(self):
+        '''
+            Test user profile with invalid token
+        '''
+        token = self.user_token[0]
+        helpers.add_token_to_white_list(token)
+        self.user_follow_with_correct_response_method(user_id=2, token=token)
+        res = self.user_profile_with_correct_response_method(str(2))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["code"], 0)
 
     def test_user_profile_with_wrong_response_method(self):
         '''
@@ -2489,7 +2703,7 @@ class ViewsTests(TestCase):
         '''
             Test image search
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             req = {
                 "target": "title",
                 "keyword": "food",
@@ -2500,15 +2714,15 @@ class ViewsTests(TestCase):
                 ],
                 "category": "food",
                 "tags": ["food"],
-                "type": type,
+                "type": each_type,
                 "page": 1
             }
-            if type == "regex":
+            if each_type == "regex":
                 req["tags"] = []
             res = self.image_search_with_correct_response_method(req)
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json()["code"], 0)
-            self.assertEqual(len(res.json()["data"]), 3)
+            self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_wrong_method(self):
         '''
@@ -2543,8 +2757,8 @@ class ViewsTests(TestCase):
         '''
             Test image search wrong target
         '''
-        for type in ["perfect", "partial", "regex"]:
-            if type != "regex":
+        for each_type in ["perfect", "partial", "regex"]:
+            if each_type != "regex":
                 wrong_targets = ["wrong target"]
             else:
                 wrong_targets = ["wrong target", ""]
@@ -2559,7 +2773,7 @@ class ViewsTests(TestCase):
                     ],
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
                 res = self.image_search_with_correct_response_method(req)
@@ -2570,7 +2784,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with missing target
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             req = {
                 "keyword": "food",
                 "filter": [ 
@@ -2580,7 +2794,7 @@ class ViewsTests(TestCase):
                 ],
                 "category": "food",
                 "tags": ["food"],
-                "type": type,
+                "type": each_type,
                 "page": 1
             }
             res = self.image_search_with_correct_response_method(req)
@@ -2591,7 +2805,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with missing keyword
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2602,16 +2816,16 @@ class ViewsTests(TestCase):
                     ],
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
-                if type == "regex":
+                if each_type == "regex":
                     req["tags"] = []
                 res = self.image_search_with_correct_response_method(req)
-                if type == "regex":
+                if each_type == "regex":
                     self.assertEqual(res.status_code, 200)
                     self.assertEqual(res.json()["code"], 0)
-                    self.assertEqual(len(res.json()["data"]), 3)
+                    self.assertEqual(len(res.json()["data"]), 4)
                 else:
                     self.assertEqual(res.status_code, 400)
                     self.assertEqual(res.json()["code"], 1005)
@@ -2620,7 +2834,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with missing target and keyword
         '''
-        for type in ["perfect", "partial"]:
+        for each_type in ["perfect", "partial"]:
             req = {
                 "filter": [ 
                     {"range": {"width": {"gte": 0, "lte": 1000}}},
@@ -2629,40 +2843,40 @@ class ViewsTests(TestCase):
                 ],
                 "category": "food",
                 "tags": ["food"],
-                "type": type,
+                "type": each_type,
                 "page": 1
             }
             res = self.image_search_with_correct_response_method(req)
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json()["code"], 0)
-            self.assertEqual(len(res.json()["data"]), 3)
+            self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_missing_filter(self):
         '''
             Test image search with missing filter
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
                     "keyword": "food",
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
-                if type == "regex":
+                if each_type == "regex":
                     req["tags"] = []
-                res = self.image_search_with_correct_response_method(req)    
+                res = self.image_search_with_correct_response_method(req)
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(res.json()["code"], 0)
-                self.assertEqual(len(res.json()["data"]), 3)
+                self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_missing_category(self):
         '''
             Test image search with missing category
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2673,21 +2887,21 @@ class ViewsTests(TestCase):
                         {"range": {"duration": {"gte": 0, "lte": 1000}}}
                     ],
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
-                if type == "regex":
+                if each_type == "regex":
                     req["tags"] = []
-                res = self.image_search_with_correct_response_method(req)         
+                res = self.image_search_with_correct_response_method(req)
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(res.json()["code"], 0)
-                self.assertEqual(len(res.json()["data"]), 3)
+                self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_missing_tags(self):
         '''
             Test image search with missing tags
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2698,20 +2912,20 @@ class ViewsTests(TestCase):
                         {"range": {"duration": {"gte": 0, "lte": 1000}}}
                     ],
                     "category": "food",
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
-                res = self.image_search_with_correct_response_method(req)          
+                res = self.image_search_with_correct_response_method(req)
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(res.json()["code"], 0)
-                self.assertEqual(len(res.json()["data"]), 3)
+                self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_wrong_filter_type(self):
         '''
             Test image search with wrong filter type
         '''
         ress = []
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2719,9 +2933,9 @@ class ViewsTests(TestCase):
                     "filter": {"range": {"width": {"gte": 0, "lte": 1000}}},
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
-                }                
+                }
                 ress.append(self.image_search_with_correct_response_method(req))
                 req = {
                     "target": target,
@@ -2729,7 +2943,7 @@ class ViewsTests(TestCase):
                     "filter": [1, 2],
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
                 ress.append(self.image_search_with_correct_response_method(req))
@@ -2739,7 +2953,7 @@ class ViewsTests(TestCase):
                     "filter": [{"wrong key": {"width": {"gte": 0, "lte": 1000}}}],
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
                 ress.append(self.image_search_with_correct_response_method(req))
@@ -2751,7 +2965,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with wrong keyword type
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2763,7 +2977,7 @@ class ViewsTests(TestCase):
                     ],
                     "category": "food",
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
                 res = self.image_search_with_correct_response_method(req)
@@ -2774,7 +2988,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with wrong category type
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2786,7 +3000,7 @@ class ViewsTests(TestCase):
                     ],
                     "category": 1.2,
                     "tags": ["food"],
-                    "type": type,
+                    "type": each_type,
                     "page": 1
                 }
                 res = self.image_search_with_correct_response_method(req)
@@ -2797,7 +3011,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with wrong tags type
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 for wrong_tag in ["food", 1, [0, "foods"]]:
                     req = {
@@ -2810,7 +3024,7 @@ class ViewsTests(TestCase):
                         ],
                         "category": "food",
                         "tags": wrong_tag,
-                        "type": type,
+                        "type": each_type,
                         "page": 1
                     }
                     res = self.image_search_with_correct_response_method(req)
@@ -2837,7 +3051,7 @@ class ViewsTests(TestCase):
             res = self.image_search_with_correct_response_method(req)
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json()["code"], 0)
-            self.assertEqual(len(res.json()["data"]), 3)
+            self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_wrong_type(self):
         '''
@@ -2865,7 +3079,7 @@ class ViewsTests(TestCase):
         '''
             Test image search with missing page
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 req = {
                     "target": target,
@@ -2877,20 +3091,20 @@ class ViewsTests(TestCase):
                     ],
                     "category": "food",
                     "tags": ["food"],
-                    "type": type
+                    "type": each_type
                 }
-                if type == "regex":
+                if each_type == "regex":
                     req["tags"] = []
                 res = self.image_search_with_correct_response_method(req)
                 self.assertEqual(res.status_code, 200)
                 self.assertEqual(res.json()["code"], 0)
-                self.assertEqual(len(res.json()["data"]), 3)
+                self.assertEqual(len(res.json()["data"]), 4)
 
     def test_image_search_with_wrong_page(self):
         '''
             Test image search with wrong page
         '''
-        for type in ["perfect", "partial", "regex"]:
+        for each_type in ["perfect", "partial", "regex"]:
             for target in ["title", "uploader"]:
                 for wrong_page in ["1", 1.2, 0, -100]:
                     req = {
@@ -2903,7 +3117,7 @@ class ViewsTests(TestCase):
                         ],
                         "category": "food",
                         "tags": ["food"],
-                        "type": type,
+                        "type": each_type,
                         "page": wrong_page
                     }
                     res = self.image_search_with_correct_response_method(req)
@@ -2917,7 +3131,7 @@ class ViewsTests(TestCase):
         token = self.user_token[0]
         helpers.add_token_to_white_list(token)
 
-        for type in ["perfect", "partial"]:
+        for each_type in ["perfect", "partial"]:
             req = {
                 "target": "title",
                 "keyword": "food",
@@ -2928,13 +3142,13 @@ class ViewsTests(TestCase):
                 ],
                 "category": "food",
                 "tags": ["food"],
-                "type": type,
+                "type": each_type,
                 "page": 1
             }
             res = self.image_search_with_token(req, token)
             self.assertEqual(res.status_code, 200)
             self.assertEqual(res.json()["code"], 0)
-            self.assertEqual(len(res.json()["data"]), 3)
+            self.assertEqual(len(res.json()["data"]), 4)
 
         helpers.delete_token_from_white_list(token)
 
@@ -2944,7 +3158,7 @@ class ViewsTests(TestCase):
         '''
         token = helpers.create_token(user_name="NotExist!", user_id=114514)
 
-        for type in ["perfect", "partial"]:
+        for each_type in ["perfect", "partial"]:
             req = {
                 "target": "title",
                 "keyword": "food",
@@ -2955,7 +3169,7 @@ class ViewsTests(TestCase):
                 ],
                 "category": "food",
                 "tags": ["food"],
-                "type": type,
+                "type": each_type,
                 "page": 1
             }
             res = self.image_search_with_token(req, token)
@@ -2996,3 +3210,20 @@ class ViewsTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.json()["code"], 0)
         self.assertEqual(len(res.json()["data"]), 1)
+
+    def test_search_hotwords(self):
+        '''
+            Test search hotwords
+        '''
+        res = self.search_hotwords_with_correct_response_method()
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json()["code"], 0)
+        assert isinstance(res.json()["data"], list)
+
+    def test_search_hotwords_with_wrong_method(self):
+        '''
+            Test search hotwords with wrong method
+        '''
+        res = self.search_hotwords_with_worng_response_method()
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.json()["code"], 1000)

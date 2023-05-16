@@ -121,12 +121,7 @@ def user_mail_verify(req: HttpRequest, token: str):
         verify user's email.
     '''
     if req.method == "GET":
-        try:
-            user = UserVerification.objects.filter(token=token).first()
-        except (TypeError, KeyError) as error:
-            print(error)
-            return format_error(str(error))
-
+        user = UserVerification.objects.filter(token=token).first()
         if not user:
             return request_failed(15, "INVALID_TOKEN", data={"data": {}})
         if user.is_verified is True:
@@ -295,14 +290,10 @@ def user_modify_password(req: HttpRequest):
             user_name = body["user_name"]
             old_password = body["old_password"]
             new_password = body["new_password"]
-        except (TypeError, ValueError) as error:
+        except (TypeError, KeyError) as error:
             print(error)
             return format_error(str(error))
 
-        if not helpers.user_username_checker(user_name):
-            return request_failed(2, "INVALID_USER_NAME_FORMAT", data={"data": {}})
-        if not (isinstance(old_password, str) and isinstance(new_password, str)):
-            return request_failed(3, "INVALID_PASSWORD_FORMAT", data={"data": {}})
         if not user_name == token["user_name"]:
             return unauthorized_error()
 
@@ -2432,7 +2423,7 @@ def image_search(req: HttpRequest):
         }
         格式错误：
         {
-            "code": 1005, 
+            "code": , 
             "info": "INVALID_FORMAT",
             "data": {}
         }
@@ -2528,6 +2519,7 @@ def image_search(req: HttpRequest):
                 print(error)
                 return format_error()
 
+        search_start_time = time.time()
         # 通过正则表达式搜索
         if body["type"] == "regex":
             query = Q()
@@ -2592,8 +2584,12 @@ def image_search(req: HttpRequest):
                 id_list = search_engine.search_perfect(request=body)
             elif body["type"] == "partial":
                 id_list = search_engine.search_partial(request=body)
+            # elif body["type"] == "fuzzy":
+            #     id_list = search_engine.search_fuzzy(target=body["target"], keyword=body["keyword"])
             else:
                 return format_error()
+
+        search_finish_time = time.time()
 
         # print(f"id_list[:10] = {id_list[:10]}")
         id_list = [id for id in id_list if GifMetadata.objects.filter(id=id).first()]
@@ -2606,7 +2602,8 @@ def image_search(req: HttpRequest):
                 "data": {
                     "page_count": pages,
                     "page_data": gif_list,
-                    "time": finish_time - start_time
+                    "time": finish_time - start_time,
+                    "search_time": search_finish_time - search_start_time
                 }
             })
     return not_found_error()
@@ -2665,4 +2662,27 @@ def image_gifs_count(req: HttpRequest):
     if req.method == "GET":
         count = GifMetadata.objects.count()
         return request_success(data={"data": count})
+    return not_found_error()
+
+@csrf_exempt
+@handle_errors
+def search_hotwords(req: HttpRequest):
+    """
+    request:
+        None
+    response:
+        {
+            "code": 0,
+            "message": "SUCCESS",
+            "data": {
+                ['spider', 'dog', 'hello', 'large', 'still', 'word']
+            }
+        }
+    """
+    if req.method == "GET":
+        search_engine = config.SEARCH_ENGINE
+        hotwords_list = search_engine.hotwords_search()
+        return request_success(data={
+                "data": hotwords_list
+            })
     return not_found_error()
