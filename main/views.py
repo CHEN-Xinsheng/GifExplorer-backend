@@ -743,8 +743,8 @@ def user_post_message(req: HttpRequest):
         new_message = Message.objects.create(sender=sender, receiver=receiver, message=message)
         return_data = {
             "data": {
-                "sender": sender.user_name,
-                "receiver": receiver.user_name,
+                "sender": sender.id,
+                "receiver": receiver.id,
                 "message": message,
                 "pub_time": new_message.pub_time
             }
@@ -2524,7 +2524,7 @@ def image_search(req: HttpRequest):
             body["type"] = "perfect"
         # type 必须为 "perfect", "partial", "fuzzy", "regex" 之一
         try:
-            assert body["type"] in ["perfect", "partial", "fuzzy", "regex"]
+            assert body["type"] in ["perfect", "partial", "fuzzy", "regex", "related"]
         except Exception as error:
             print(error)
             return format_error()
@@ -2619,8 +2619,10 @@ def image_search(req: HttpRequest):
                 id_list = search_engine.search_perfect(request=body)
             elif body["type"] == "partial":
                 id_list = search_engine.search_partial(request=body)
-            # elif body["type"] == "fuzzy":
-            #     id_list = search_engine.search_fuzzy(target=body["target"], keyword=body["keyword"])
+            elif body["type"] == "fuzzy":
+                id_list = search_engine.search_fuzzy(request=body)
+            elif body["type"] == "related":
+                id_list = search_engine.search_related(request=body)
             else:
                 return format_error()
 
