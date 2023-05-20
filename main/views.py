@@ -809,6 +809,45 @@ def user_read_message(req: HttpRequest, user_id: any):
 
 @csrf_exempt
 @handle_errors
+def user_info(req: HttpRequest, user_id: any):
+    '''
+    request:
+        - None
+    response:
+        - status
+    '''
+    if req.method == "GET":
+        if not isinstance(user_id, str) or not user_id.isdigit():
+            return format_error()
+
+        user = UserInfo.objects.filter(id=int(user_id)).first()
+        if not user:
+            return request_failed(12, "USER_NOT_FOUND", data={"data": {}})
+
+        is_followed = False
+        if req.META.get("HTTP_AUTHORIZATION"):
+            encoded_token = str(req.META.get("HTTP_AUTHORIZATION"))
+            token = helpers.decode_token(encoded_token)
+            if not helpers.is_token_valid(token=encoded_token):
+                return unauthorized_error()
+            current_user = UserInfo.objects.filter(id=token["id"]).first()
+            if str(user.id) in current_user.followings:
+                is_followed = True
+
+        return_data = {
+            "data": {
+                "id": user.id,
+                "user_name": user.user_name,
+                "signature": user.signature,
+                "avatar": user.avatar,
+                "is_followed": is_followed
+            }
+        }
+        return request_success(return_data)
+    return not_found_error()
+
+@csrf_exempt
+@handle_errors
 def user_read_history(req: HttpRequest):
     '''
     request:
@@ -2655,6 +2694,7 @@ def search_suggest(req: HttpRequest):
     request:
         {
             "query": "Hello" (default = ""),
+            "target": "title" (default = "title")
             "correct": True (default = True)
         }
     response:
@@ -2677,36 +2717,34 @@ def search_suggest(req: HttpRequest):
             return format_error()
         if "query" not in body:
             body["query"] = ""
+        try:
+           assert body["target"] in ["title", "uploader"]
+        except:
+            body["target"] = "title"
         if "correct" not in body:
             body["correct"] = True
 
         # 连接搜索模块
         search_engine = config.SEARCH_ENGINE
 
-        # 如果不纠错
-        # if not body["correct"]:
-        if True:
-            # 直接获取补全建议
-            suggestion_list = search_engine.suggest_search(body["query"])
+        suggestion_list = search_engine.suggest_search(body["query"])
+        # 如果建议结果较少且需要纠错
+        if len(suggestion_list) < 4 and body["correct"]:
+            # 获取纠错建议
+            corrected_list = search_engine.correct_search(input=body["query"], target=body["target"])
+            return request_success(data=
+                {
+                    "data": {
+                        "suggestions": suggestion_list + corrected_list
+                    }
+                })
+        else:
             return request_success(data=
                 {
                     "data": {
                         "suggestions": suggestion_list
                     }
                 })
-        # # 如果需要纠错
-        # else:
-        #     # 先纠错
-        #     corrected = search_engine.correct(body["query"])
-        #     # 用纠错后的结果去获取补全建议
-        #     suggestion_list = search_engine.suggest_search(corrected)
-        #     return request_success(data=
-        #         {
-        #             "data": {
-        #                 "suggestions": [corrected] + suggestion_list
-        #                 # 第一个结果为纠错建议结果
-        #             }
-        #         })
     return not_found_error()
 
 @csrf_exempt
