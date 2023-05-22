@@ -144,7 +144,7 @@ class ElasticSearchEngine():
             self.client.index(
                 index="message_index", body={"message": search_text}
             )
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         # hits_num = response["hits"]["total"]["value"]
         return [hit["_id"] for hit in response["hits"]["hits"]]
 
@@ -264,7 +264,7 @@ class ElasticSearchEngine():
             self.client.index(
                 index="message_index", body={"message": search_text}
             )
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         # hits_num = response["hits"]["total"]["value"]
         return [hit["_id"] for hit in response["hits"]["hits"]]
     
@@ -376,7 +376,7 @@ class ElasticSearchEngine():
             self.client.index(
                 index="message_index", body={"message": search_text}
             )
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         # hits_num = response["hits"]["total"]["value"]
         return [hit["_id"] for hit in response["hits"]["hits"]]
 
@@ -475,7 +475,7 @@ class ElasticSearchEngine():
             self.client.index(
                 index="message_index", body={"message": search_text}
             )
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         # hits_num = response["hits"]["total"]["value"]
         return [hit["_id"] for hit in response["hits"]["hits"]]
 
@@ -566,7 +566,7 @@ class ElasticSearchEngine():
                 }
             })
 
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         # hits_num = response["hits"]["total"]["value"]
         return [hit["_id"] for hit in response["hits"]["hits"]]
 
@@ -609,7 +609,7 @@ class ElasticSearchEngine():
             }
         }
 
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         return [
             op["_source"]["suggest"]
             for op in response["suggest"]["title_suggest"][0]["options"]
@@ -680,7 +680,7 @@ class ElasticSearchEngine():
         body["suggest"]["correct"]["phrase"] = phrase
         body["suggest"]["correct"]["text"] = input
 
-        response = self.client.search(index="gif", body=body, size=1000, preference="primary")
+        response = self.client.search(index="gif", body=body, size=400, preference="primary")
         return [
             option["text"]
             for option in response["suggest"]["correct"][0]["options"]
